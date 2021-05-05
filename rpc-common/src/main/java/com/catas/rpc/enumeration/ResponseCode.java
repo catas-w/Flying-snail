@@ -1,7 +1,6 @@
-package com.catas.rpc.common;
+package com.catas.rpc.enumeration;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 
 @Getter

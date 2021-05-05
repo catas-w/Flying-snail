@@ -1,18 +1,21 @@
 package com.catas.testServer;
 
+import com.catas.rpc.RPCServer;
 import com.catas.rpc.registry.DefaultServiceRegistry;
 import com.catas.rpc.registry.ServiceRegistry;
-import com.catas.rpc.server.RPCServer;
+import com.catas.rpc.socket.server.SocketServer;
 
 public class testServer {
 
     public static void main(String[] args) {
-        HelloServiceImpl helloService = new HelloServiceImpl();
+        // HelloServiceImpl helloService = new HelloServiceImpl();
         AddServiceImpl addService = new AddServiceImpl();
         ServiceRegistry serviceRegistry = new DefaultServiceRegistry();
-        serviceRegistry.register(helloService);
+        // serviceRegistry.register(helloService);
         serviceRegistry.register(addService);
-        RPCServer rpcServer = new RPCServer(serviceRegistry);
+        RPCServer rpcServer = new SocketServer(serviceRegistry);
         rpcServer.start(9001);
+
+
     }
 }

@@ -1,7 +1,7 @@
 package com.catas.rpc.registry;
 
 
-import com.catas.rpc.common.RPCError;
+import com.catas.rpc.enumeration.RPCError;
 import com.catas.rpc.exception.RPCException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -12,12 +12,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class DefaultServiceRegistry implements ServiceRegistry{
 
-    private final Map<String, Object> serviceMap = new ConcurrentHashMap<>();
+    private static final Map<String, Object> serviceMap = new ConcurrentHashMap<>();
 
-    private final Set<String> registeredService = ConcurrentHashMap.newKeySet();
+    private static final Set<String> registeredService = ConcurrentHashMap.newKeySet();
 
     @Override
-    public <T> void register(T service) {
+    public synchronized <T> void register(T service) {
         String serviceName = service.getClass().getCanonicalName();
         if (registeredService.contains(serviceName))
             return;
@@ -34,8 +34,10 @@ public class DefaultServiceRegistry implements ServiceRegistry{
     }
 
     @Override
-    public Object getService(String serviceName) {
+    public synchronized Object getService(String serviceName) {
         Object res = serviceMap.get(serviceName);
+        System.out.println(serviceMap);
+        Set<String> keySet = serviceMap.keySet();
         if (res == null)
             throw new RPCException(RPCError.SERVICE_NOT_FOUND);
 

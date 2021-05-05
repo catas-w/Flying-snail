@@ -5,7 +5,7 @@ import com.catas.rpc.api.AddService;
 public class AddServiceImpl implements AddService {
 
     @Override
-    public int add(int a, int b) {
+    public Integer add(Integer a, Integer b) {
         return a + b;
     }
 }

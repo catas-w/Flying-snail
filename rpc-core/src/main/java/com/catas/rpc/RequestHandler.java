@@ -1,7 +1,7 @@
-package com.catas.rpc.server;
+package com.catas.rpc;
 
 
-import com.catas.rpc.common.ResponseCode;
+import com.catas.rpc.enumeration.ResponseCode;
 import com.catas.rpc.entity.RPCRequest;
 import com.catas.rpc.entity.RPCResponse;
 import lombok.extern.slf4j.Slf4j;

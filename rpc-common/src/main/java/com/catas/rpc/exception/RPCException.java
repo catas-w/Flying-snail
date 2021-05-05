@@ -1,6 +1,6 @@
 package com.catas.rpc.exception;
 
-import com.catas.rpc.common.RPCError;
+import com.catas.rpc.enumeration.RPCError;
 
 public class RPCException extends RuntimeException{
 

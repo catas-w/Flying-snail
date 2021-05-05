@@ -1,22 +1,23 @@
-package com.catas.rpc.client;
+package com.catas.rpc;
 
 
 import com.catas.rpc.entity.RPCRequest;
 import com.catas.rpc.entity.RPCResponse;
+import com.catas.rpc.socket.client.SocketClient;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+
+@Slf4j
 public class RPCClientProxy implements InvocationHandler {
 
-    private final String hostAddr;
+    private final RPCClient rpcClient;
 
-    private final Integer port;
-
-    public RPCClientProxy(String hostAddr, Integer port) {
-        this.hostAddr = hostAddr;
-        this.port = port;
+    public RPCClientProxy(RPCClient rpcClient) {
+        this.rpcClient = rpcClient;
     }
 
     @SuppressWarnings("unchecked")
@@ -26,14 +27,14 @@ public class RPCClientProxy implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        log.info("调用方法: {}.{}", method.getDeclaringClass().getName(), method.getName());
         RPCRequest request = RPCRequest.builder()
                 .interfaceName(method.getDeclaringClass().getName())
                 .methodName(method.getName())
                 .arguments(args)
                 .argTypes(method.getParameterTypes())
                 .build();
-        RPCClient rpcClient = new RPCClient();
-        RPCResponse res = (RPCResponse) rpcClient.sendRequest(request, hostAddr, port);
-        return res.getData();
+
+        return rpcClient.sendRequest(request);
     }
 }

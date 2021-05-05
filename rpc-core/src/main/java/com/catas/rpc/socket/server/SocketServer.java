@@ -1,5 +1,7 @@
-package com.catas.rpc.server;
+package com.catas.rpc.socket.server;
 
+import com.catas.rpc.RPCServer;
+import com.catas.rpc.RequestHandler;
 import com.catas.rpc.registry.ServiceRegistry;
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,7 +11,7 @@ import java.net.Socket;
 import java.util.concurrent.*;
 
 @Slf4j
-public class RPCServer {
+public class SocketServer implements RPCServer {
 
     private final ExecutorService threadPool;
 
@@ -23,13 +25,14 @@ public class RPCServer {
     private final int BLOCK_QUEUE_CAPACITY = 100;
 
 
-    public RPCServer(ServiceRegistry serviceRegistry) {
+    public SocketServer(ServiceRegistry serviceRegistry) {
         this.serviceRegistry = serviceRegistry;
         ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(BLOCK_QUEUE_CAPACITY);
         ThreadFactory threadFactory = Executors.defaultThreadFactory();
         threadPool = new ThreadPoolExecutor(CORE_POOL_SIZE, MAX_POOL_SIZE, KEEP_ALIVE, TimeUnit.SECONDS, workQueue, threadFactory);
     }
 
+    @Override
     public void start(int port) {
         try {
             ServerSocket serverSocket = new ServerSocket(port);

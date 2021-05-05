@@ -1,8 +1,6 @@
 package com.catas.rpc.entity;
 
-import com.catas.rpc.common.ResponseCode;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.catas.rpc.enumeration.ResponseCode;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
