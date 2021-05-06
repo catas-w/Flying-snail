@@ -13,8 +13,10 @@ public interface CommonSerializer {
 
     static CommonSerializer getByCode(int code) {
         switch (code) {
+            case 0:
+                return new KryoSerializer();
             case 1:
-                return new  JsonSerializer();
+                return new JsonSerializer();
             default:
                 return null;
         }

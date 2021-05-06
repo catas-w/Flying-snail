@@ -15,6 +15,7 @@ public class NettyTestClient {
         HelloObj helloObj = new HelloObj(12, "cccc");
         String res = helloService.hello(helloObj);
         System.out.println(res);
+
         System.out.println("--------");
         AddService addService = clientProxy.getProxy(AddService.class);
         Integer add = addService.add(12, 22);

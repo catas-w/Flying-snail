@@ -4,6 +4,7 @@ import com.catas.rpc.RPCServer;
 import com.catas.rpc.codec.CommonDecoder;
 import com.catas.rpc.codec.CommonEncoder;
 import com.catas.rpc.serializer.JsonSerializer;
+import com.catas.rpc.serializer.KryoSerializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -43,7 +44,8 @@ public class NettyServer implements RPCServer {
                             // 初始化管道
                             ChannelPipeline pipeline = channel.pipeline();
                             pipeline.addLast(new CommonDecoder())
-                                    .addLast(new CommonEncoder(new JsonSerializer()))
+                                    // .addLast(new CommonEncoder(new JsonSerializer()))
+                                    .addLast(new CommonEncoder(new KryoSerializer()))
                                     .addLast(new NettyServerHandler());
                         }
                     });
