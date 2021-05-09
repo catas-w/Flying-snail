@@ -16,4 +16,11 @@
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+    </dependencies>
 </project>
