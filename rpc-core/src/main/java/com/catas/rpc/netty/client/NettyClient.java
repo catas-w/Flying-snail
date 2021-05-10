@@ -5,6 +5,9 @@ import com.catas.rpc.codec.CommonDecoder;
 import com.catas.rpc.codec.CommonEncoder;
 import com.catas.rpc.entity.RPCRequest;
 import com.catas.rpc.entity.RPCResponse;
+import com.catas.rpc.enumeration.RPCError;
+import com.catas.rpc.exception.RPCException;
+import com.catas.rpc.serializer.CommonSerializer;
 import com.catas.rpc.serializer.JsonSerializer;
 import com.catas.rpc.serializer.KryoSerializer;
 import io.netty.bootstrap.Bootstrap;
@@ -21,6 +24,8 @@ public class NettyClient implements RPCClient {
     private String host;
 
     private Integer port;
+
+    private CommonSerializer serializer;
 
     private static final Bootstrap bootstrap;
 
@@ -49,6 +54,10 @@ public class NettyClient implements RPCClient {
 
     @Override
     public Object sendRequest(RPCRequest request) {
+        if (serializer == null) {
+            log.error("序列化器不能为空");
+            throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
+        }
         try {
             ChannelFuture future = bootstrap.connect(host, port).sync();
             log.info("客户端连接到服务器: {}:{}", host, port);
@@ -75,4 +84,10 @@ public class NettyClient implements RPCClient {
         }
         return null;
     }
+
+    @Override
+    public void setSerializer(CommonSerializer serializer) {
+        this.serializer = serializer;
+    }
+
 }

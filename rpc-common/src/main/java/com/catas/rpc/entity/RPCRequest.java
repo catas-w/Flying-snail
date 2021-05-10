@@ -16,6 +16,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class RPCRequest implements Serializable {
 
+    private String requestId;
+
     private String interfaceName;
 
     private String methodName;

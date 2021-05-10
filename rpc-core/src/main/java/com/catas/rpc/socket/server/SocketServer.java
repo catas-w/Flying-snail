@@ -2,7 +2,10 @@ package com.catas.rpc.socket.server;
 
 import com.catas.rpc.RPCServer;
 import com.catas.rpc.RequestHandler;
+import com.catas.rpc.enumeration.RPCError;
+import com.catas.rpc.exception.RPCException;
 import com.catas.rpc.registry.ServiceRegistry;
+import com.catas.rpc.serializer.CommonSerializer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -19,11 +22,16 @@ public class SocketServer implements RPCServer {
 
     private final RequestHandler requestHandler = new RequestHandler();
 
-    private final int CORE_POOL_SIZE = 5;
-    private final int MAX_POOL_SIZE = 50;
-    private final int KEEP_ALIVE = 60;
-    private final int BLOCK_QUEUE_CAPACITY = 100;
+    private CommonSerializer serializer;
 
+    private static final int CORE_POOL_SIZE = 5;
+    private static final int MAX_POOL_SIZE = 50;
+    private static final int KEEP_ALIVE = 60;
+    private static final int BLOCK_QUEUE_CAPACITY = 100;
+
+    public void setSerializer(CommonSerializer serializer) {
+        this.serializer = serializer;
+    }
 
     public SocketServer(ServiceRegistry serviceRegistry) {
         this.serviceRegistry = serviceRegistry;
@@ -34,13 +42,17 @@ public class SocketServer implements RPCServer {
 
     @Override
     public void start(int port) {
+        if (serializer == null) {
+            log.error("序列化器未设置");
+            throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
+        }
         try {
             ServerSocket serverSocket = new ServerSocket(port);
             log.info("服务正在启动...");
             Socket socket;
             while ((socket = serverSocket.accept()) != null) {
                 log.info("连接到客户端: {} : {}", socket.getInetAddress(), socket.getPort());
-                threadPool.execute(new RequestHandlerThread(socket, requestHandler, serviceRegistry));
+                threadPool.execute(new RequestHandlerThread(socket, requestHandler, serviceRegistry, serializer));
             }
             threadPool.shutdown();
         } catch (IOException e) {

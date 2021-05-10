@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.UUID;
 
 
 @Slf4j
@@ -29,6 +30,7 @@ public class RPCClientProxy implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         log.info("调用方法: {}.{}", method.getDeclaringClass().getName(), method.getName());
         RPCRequest request = RPCRequest.builder()
+                .requestId(UUID.randomUUID().toString())
                 .interfaceName(method.getDeclaringClass().getName())
                 .methodName(method.getName())
                 .arguments(args)

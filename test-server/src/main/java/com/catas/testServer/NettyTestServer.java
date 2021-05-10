@@ -2,6 +2,8 @@ package com.catas.testServer;
 
 import com.catas.rpc.netty.server.NettyServer;
 import com.catas.rpc.registry.DefaultServiceRegistry;
+import com.catas.rpc.serializer.HessianSerializer;
+import com.catas.rpc.serializer.KryoSerializer;
 
 public class NettyTestServer {
 
@@ -11,7 +13,9 @@ public class NettyTestServer {
         DefaultServiceRegistry serviceRegistry = new DefaultServiceRegistry();
         serviceRegistry.register(helloService);
         serviceRegistry.register(addService);
+        
         NettyServer nettyServer = new NettyServer();
+        nettyServer.setSerializer(new HessianSerializer());
         nettyServer.start(9001);
     }
 }

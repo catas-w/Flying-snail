@@ -7,6 +7,10 @@ import com.catas.rpc.enumeration.ResponseCode;
 import com.catas.rpc.entity.RPCRequest;
 import com.catas.rpc.entity.RPCResponse;
 import com.catas.rpc.exception.RPCException;
+import com.catas.rpc.serializer.CommonSerializer;
+import com.catas.rpc.socket.util.ObjectReader;
+import com.catas.rpc.socket.util.ObjectWriter;
+import com.catas.rpc.util.RPCMessageChecker;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -21,6 +25,12 @@ public class SocketClient implements RPCClient{
 
     private final Integer port;
 
+    private CommonSerializer serializer;
+
+    public void setSerializer(CommonSerializer serializer) {
+        this.serializer = serializer;
+    }
+
     public SocketClient(String hostAddr, Integer port) {
         this.host = hostAddr;
         this.port = port;
@@ -28,16 +38,19 @@ public class SocketClient implements RPCClient{
 
     @Override
     public Object sendRequest(RPCRequest request) {
+        if (serializer == null) {
+            log.error("序列化器不能为空");
+            throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
+        }
         try {
             Socket socket = new Socket(host, port);
             ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-            outputStream.writeObject(request);
-            outputStream.flush();
-            // RPCResponse response = (RPCResponse) inputStream.readObject();
-            Object resp = inputStream.readObject();
-            System.out.println(resp);
+            ObjectWriter.writeObject(outputStream, request, serializer);
+
+            Object resp = ObjectReader.readObject(inputStream);
             RPCResponse response = (RPCResponse) resp;
+
             if (response == null) {
                 log.info("服务调用失败, service: {}", request.getInterfaceName());
                 throw new RPCException(RPCError.SERVICE_INVOCATION_FAILURE, "service: " + request.getInterfaceName());
@@ -46,15 +59,15 @@ public class SocketClient implements RPCClient{
                 log.info("服务调用失败, service: {}, respnes: {}", request.getInterfaceName(), response);
                 throw new RPCException(RPCError.SERVICE_INVOCATION_FAILURE, "service: " + request.getInterfaceName());
             }
-
-
+            // 检查
+            RPCMessageChecker.check(request, response);
             return response.getData();
-        } catch (IOException | ClassNotFoundException e) {
+
+        } catch (IOException e) {
             e.printStackTrace();
             log.error("Error occurred during calling remote procedure.");
             return null;
         }
     }
-
 
 }
