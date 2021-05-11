@@ -2,10 +2,7 @@ package com.catas;
 
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 public class simpleTest {
 
@@ -28,5 +25,69 @@ public class simpleTest {
         System.out.println(queue);
         queue.poll();
         System.out.println(queue);
+    }
+
+    @Test
+    public void test3() {
+        // System.out.println(removeInvalidParentheses("q("));
+        // System.out.println(removeInvalidParentheses("q)"));
+        // System.out.println(removeInvalidParentheses("(a"));
+        // System.out.println(removeInvalidParentheses(""));
+        // System.out.println(removeInvalidParentheses("(a)())()"));
+        // System.out.println(removeInvalidParentheses("(a()))(s)())()"));
+        // System.out.println(removeInvalidParentheses(")("));
+        // System.out.println(removeInvalidParentheses("(()"));
+        System.out.println(removeInvalidParentheses("()(((((((()"));
+    }
+
+    public List<String> removeInvalidParentheses(String s) {
+        Set<String> res = new HashSet<>();
+        Set<String> memo = new HashSet<>();
+        List<String> list = new ArrayList<>();
+        Queue<String> queue = new LinkedList<>();
+        queue.add(s);
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            while (size-- > 0) {
+                String curStr = queue.poll();
+                // 合法
+                if (isValid(curStr)) {
+                    res.add(curStr);
+                }
+                // 当前字符串减去一个字符的所有子串入队
+                for (int i=0; i<curStr.length(); i++) {
+                    String subStr = curStr.substring(0, i) + curStr.substring(i+1);
+                    if (memo.add(subStr))
+                        queue.add(subStr);
+                }
+            }
+            if (res.size() > 0) {
+                break;
+            }
+        }
+        if (res.isEmpty()) {
+            res.add("");
+        }
+        return new ArrayList<String>(res);
+    }
+
+    public boolean isValid(String s) {
+        int count = 0;
+        for (char chr: s.toCharArray()) {
+            if (chr >= 'a' && chr <= 'z') {
+                continue;
+            }
+            else if (chr == '(') {
+                count ++;
+            } else {
+                if (count > 0) {
+                    if (chr == ')')
+                        count --;
+                } else {
+                    return false;
+                }
+            }
+        }
+        return count == 0;
     }
 }

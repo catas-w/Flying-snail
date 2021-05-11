@@ -10,6 +10,7 @@ import com.catas.rpc.exception.RPCException;
 import com.catas.rpc.serializer.CommonSerializer;
 import com.catas.rpc.serializer.JsonSerializer;
 import com.catas.rpc.serializer.KryoSerializer;
+import com.catas.rpc.util.RPCMessageChecker;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -17,6 +18,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
+
+import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 public class NettyClient implements RPCClient {
@@ -39,17 +43,7 @@ public class NettyClient implements RPCClient {
         bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
-                .option(ChannelOption.SO_KEEPALIVE, true)
-                .handler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel channel) throws Exception {
-                        ChannelPipeline pipeline = channel.pipeline();
-                        pipeline.addLast(new CommonDecoder())
-                                // .addLast(new CommonEncoder(new JsonSerializer()))
-                                .addLast(new CommonEncoder(new KryoSerializer()))
-                                .addLast(new NettyClientHandler());
-                    }
-                });
+                .option(ChannelOption.SO_KEEPALIVE, true);
     }
 
     @Override
@@ -58,11 +52,12 @@ public class NettyClient implements RPCClient {
             log.error("序列化器不能为空");
             throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
         }
+        AtomicReference<Object> result = new AtomicReference<>(null);
+
         try {
-            ChannelFuture future = bootstrap.connect(host, port).sync();
             log.info("客户端连接到服务器: {}:{}", host, port);
-            Channel channel = future.channel();
-            if (channel != null) {
+            Channel channel = ChannelProvider.get(new InetSocketAddress(host, port), serializer);
+            if (channel.isActive()) {
                 // 向服务器发送请求并设置监听
                 channel.writeAndFlush(request).addListener(future1 -> {
                     if (future1.isSuccess()) {
@@ -73,16 +68,20 @@ public class NettyClient implements RPCClient {
                 });
                 channel.closeFuture().sync();
                 // AttributeMap<AttributeKey, AttributeValue>是绑定在Channel上的，可以设置用来获取通道对象
-                AttributeKey<RPCResponse> key = AttributeKey.valueOf("RPCResponse");
+                AttributeKey<RPCResponse> key = AttributeKey.valueOf("RPCResponse" + request.getRequestId());
                 // 阻塞获取value
                 RPCResponse response = channel.attr(key).get();
-                return response.getData();
+                RPCMessageChecker.check(request, response);
+                result.set(response.getData());
+            } else {
+                System.exit(0);
             }
         } catch (InterruptedException e) {
             log.info("发送请求时出错");
             e.printStackTrace();
         }
-        return null;
+
+        return result.get();
     }
 
     @Override

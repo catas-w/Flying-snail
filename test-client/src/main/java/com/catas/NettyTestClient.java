@@ -7,12 +7,13 @@ import com.catas.rpc.api.HelloService;
 import com.catas.rpc.netty.client.NettyClient;
 import com.catas.rpc.serializer.HessianSerializer;
 import com.catas.rpc.serializer.KryoSerializer;
+import com.catas.rpc.serializer.ProtostuffSerializer;
 
 public class NettyTestClient {
 
     public static void main(String[] args) {
         NettyClient nettyClient = new NettyClient("127.0.0.1", 9001);
-        nettyClient.setSerializer(new HessianSerializer());
+        nettyClient.setSerializer(new ProtostuffSerializer());
 
         RPCClientProxy clientProxy = new RPCClientProxy(nettyClient);
         HelloService helloService = clientProxy.getProxy(HelloService.class);
