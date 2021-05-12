@@ -1,39 +1,39 @@
-package com.catas.rpc.socket.client;
+package com.catas.rpc.transport.socket.client;
 
 
-import com.catas.rpc.RPCClient;
+import com.catas.rpc.registry.NacosServiceRegistry;
+import com.catas.rpc.registry.ServiceRegistry;
+import com.catas.rpc.transport.RPCClient;
 import com.catas.rpc.enumeration.RPCError;
 import com.catas.rpc.enumeration.ResponseCode;
 import com.catas.rpc.entity.RPCRequest;
 import com.catas.rpc.entity.RPCResponse;
 import com.catas.rpc.exception.RPCException;
 import com.catas.rpc.serializer.CommonSerializer;
-import com.catas.rpc.socket.util.ObjectReader;
-import com.catas.rpc.socket.util.ObjectWriter;
+import com.catas.rpc.transport.socket.util.ObjectReader;
+import com.catas.rpc.transport.socket.util.ObjectWriter;
 import com.catas.rpc.util.RPCMessageChecker;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 @Slf4j
 public class SocketClient implements RPCClient{
 
-    private final String host;
-
-    private final Integer port;
-
     private CommonSerializer serializer;
+
+    private final ServiceRegistry serviceRegistry;
 
     public void setSerializer(CommonSerializer serializer) {
         this.serializer = serializer;
     }
 
-    public SocketClient(String hostAddr, Integer port) {
-        this.host = hostAddr;
-        this.port = port;
+    public SocketClient() {
+        this.serviceRegistry = new NacosServiceRegistry();
     }
 
     @Override
@@ -42,8 +42,12 @@ public class SocketClient implements RPCClient{
             log.error("序列化器不能为空");
             throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
         }
+        InetSocketAddress socketAddress = serviceRegistry.lookUpService(request.getInterfaceName());
+
         try {
-            Socket socket = new Socket(host, port);
+            Socket socket = new Socket();
+            socket.connect(socketAddress);
+
             ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
             ObjectWriter.writeObject(outputStream, request, serializer);

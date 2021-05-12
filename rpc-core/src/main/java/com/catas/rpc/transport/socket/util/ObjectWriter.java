@@ -1,4 +1,4 @@
-package com.catas.rpc.socket.util;
+package com.catas.rpc.transport.socket.util;
 
 import com.catas.rpc.entity.RPCRequest;
 import com.catas.rpc.enumeration.PackageType;

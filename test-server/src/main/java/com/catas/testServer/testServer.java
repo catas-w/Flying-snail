@@ -1,25 +1,31 @@
 package com.catas.testServer;
 
-import com.catas.rpc.RPCServer;
-import com.catas.rpc.registry.DefaultServiceRegistry;
-import com.catas.rpc.registry.ServiceRegistry;
-import com.catas.rpc.serializer.JsonSerializer;
+import com.catas.rpc.api.AddService;
+import com.catas.rpc.serializer.HessianSerializer;
+import com.catas.rpc.transport.RPCServer;
+import com.catas.rpc.provider.ServiceProviderImpl;
+import com.catas.rpc.provider.ServiceProvider;
 import com.catas.rpc.serializer.KryoSerializer;
-import com.catas.rpc.socket.server.SocketServer;
+import com.catas.rpc.transport.socket.server.SocketServer;
 
 public class testServer {
 
     public static void main(String[] args) {
         HelloServiceImpl helloService = new HelloServiceImpl();
         AddServiceImpl addService = new AddServiceImpl();
-        ServiceRegistry serviceRegistry = new DefaultServiceRegistry();
-        serviceRegistry.register(helloService);
-        serviceRegistry.register(addService);
 
-        RPCServer rpcServer = new SocketServer(serviceRegistry);
+        SocketServer socketServer = new SocketServer("127.0.0.1", 9001);
+        socketServer.setSerializer(new HessianSerializer());
+        socketServer.publishService(addService, AddService.class);
 
-        rpcServer.setSerializer(new KryoSerializer());
-        rpcServer.start(9001);
+        // ServiceProvider serviceProvider = new ServiceProviderImpl();
+        // serviceProvider.addServiceProvider(helloService);
+        // serviceProvider.addServiceProvider(addService);
+        //
+        // RPCServer rpcServer = new SocketServer(serviceProvider);
+        //
+        // rpcServer.setSerializer(new KryoSerializer());
+        // rpcServer.start(9001);
 
 
     }

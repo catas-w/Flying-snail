@@ -1,20 +1,17 @@
-package com.catas.rpc.netty.client;
+package com.catas.rpc.transport.netty.client;
 
-import com.catas.rpc.RPCClient;
-import com.catas.rpc.codec.CommonDecoder;
-import com.catas.rpc.codec.CommonEncoder;
+import com.catas.rpc.registry.NacosServiceRegistry;
+import com.catas.rpc.registry.ServiceRegistry;
+import com.catas.rpc.transport.RPCClient;
 import com.catas.rpc.entity.RPCRequest;
 import com.catas.rpc.entity.RPCResponse;
 import com.catas.rpc.enumeration.RPCError;
 import com.catas.rpc.exception.RPCException;
 import com.catas.rpc.serializer.CommonSerializer;
-import com.catas.rpc.serializer.JsonSerializer;
-import com.catas.rpc.serializer.KryoSerializer;
 import com.catas.rpc.util.RPCMessageChecker;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
@@ -25,17 +22,14 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 public class NettyClient implements RPCClient {
 
-    private String host;
-
-    private Integer port;
-
     private CommonSerializer serializer;
 
     private static final Bootstrap bootstrap;
 
-    public NettyClient(String host, Integer port) {
-        this.host = host;
-        this.port = port;
+    private final ServiceRegistry serviceRegistry;
+
+    public NettyClient() {
+        this.serviceRegistry = new NacosServiceRegistry();
     }
 
     static {
@@ -55,8 +49,12 @@ public class NettyClient implements RPCClient {
         AtomicReference<Object> result = new AtomicReference<>(null);
 
         try {
-            log.info("客户端连接到服务器: {}:{}", host, port);
-            Channel channel = ChannelProvider.get(new InetSocketAddress(host, port), serializer);
+            // 在注册中心找到注册此服务的server地址
+            InetSocketAddress socketAddress = serviceRegistry.lookUpService(request.getInterfaceName());
+            // 连接
+            Channel channel = ChannelProvider.get(socketAddress, serializer);
+
+            log.info("客户端连接到服务器: {}:{}", socketAddress.getAddress(), socketAddress.getPort());
             if (channel.isActive()) {
                 // 向服务器发送请求并设置监听
                 channel.writeAndFlush(request).addListener(future1 -> {

@@ -14,7 +14,9 @@ public enum RPCError {
     UNKNOWN_SERIALIZER("无法识别序列化器"),
     UNKNOWN_PACKAGE_TYPE("无法识别数据包类型"),
     SERIALIZER_NOT_FOUND("找不到序列化器"),
-    RESPONSE_NOT_FOUND("响应与请求不匹配")
+    RESPONSE_NOT_MATCH("响应与请求不匹配"),
+    FAILED_TO_CONNECT_TO_SERVICE_REGISTRY("无法连接到注册中心"),
+    REGISTER_SERVICE_FAILED("服务注册失败")
     ;
 
     private final String message;

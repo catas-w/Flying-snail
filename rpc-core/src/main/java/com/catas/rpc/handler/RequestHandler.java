@@ -1,4 +1,4 @@
-package com.catas.rpc;
+package com.catas.rpc.handler;
 
 
 import com.catas.rpc.enumeration.ResponseCode;

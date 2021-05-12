@@ -1,22 +1,24 @@
 package com.catas.testServer;
 
-import com.catas.rpc.netty.server.NettyServer;
-import com.catas.rpc.registry.DefaultServiceRegistry;
+import com.catas.rpc.api.AddService;
+import com.catas.rpc.api.HelloService;
 import com.catas.rpc.serializer.HessianSerializer;
-import com.catas.rpc.serializer.KryoSerializer;
+import com.catas.rpc.transport.netty.server.NettyServer;
+import com.catas.rpc.provider.ServiceProviderImpl;
 import com.catas.rpc.serializer.ProtostuffSerializer;
 
 public class NettyTestServer {
 
     public static void main(String[] args) {
-        HelloServiceImpl helloService = new HelloServiceImpl();
+        HelloService helloService = new HelloServiceImpl();
         AddServiceImpl addService = new AddServiceImpl();
-        DefaultServiceRegistry serviceRegistry = new DefaultServiceRegistry();
-        serviceRegistry.register(helloService);
-        serviceRegistry.register(addService);
-        
-        NettyServer nettyServer = new NettyServer();
-        nettyServer.setSerializer(new ProtostuffSerializer());
-        nettyServer.start(9001);
+
+        // serviceRegistry.addServiceProvider(addService);
+
+        NettyServer nettyServer = new NettyServer("127.0.0.1", 9001);
+        nettyServer.setSerializer(new HessianSerializer());
+        // nettyServer.publishService(helloService, HelloService.class);
+        nettyServer.publishService(addService, AddService.class);
+
     }
 }

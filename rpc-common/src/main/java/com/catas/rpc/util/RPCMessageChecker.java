@@ -19,7 +19,7 @@ public class RPCMessageChecker {
         }
 
         if (!rpcRequest.getRequestId().equals(rpcResponse.getRequestId())) {
-            throw new RPCException(RPCError.RESPONSE_NOT_FOUND, INTERFACE_NAME + ":" + rpcRequest.getInterfaceName());
+            throw new RPCException(RPCError.RESPONSE_NOT_MATCH, INTERFACE_NAME + ":" + rpcRequest.getInterfaceName());
         }
 
         if (rpcResponse.getStatus() == null || !rpcResponse.getStatus().equals(ResponseCode.SUCCESS.getCode())) {

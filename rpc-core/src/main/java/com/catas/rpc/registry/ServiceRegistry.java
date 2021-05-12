@@ -1,15 +1,23 @@
 package com.catas.rpc.registry;
 
+import java.net.InetSocketAddress;
+
+/**
+ * 服务注册中心通用接口
+ */
 public interface ServiceRegistry {
 
     /**
-     * @Description: 注册服务
-     * @param service 服务对象
+     * 注册服务
+     * @param serviceName name of service
+     * @param socketAddress address, ip and port
      */
-    <T> void register(T service);
+    void register(String serviceName, InetSocketAddress socketAddress);
 
     /**
-     * @Description: 获取service对象
+     * find a service by service name
+     * @param serviceName name of service
+     * @return service entity
      */
-    Object getService(String serviceName);
+    InetSocketAddress lookUpService(String serviceName);
 }
