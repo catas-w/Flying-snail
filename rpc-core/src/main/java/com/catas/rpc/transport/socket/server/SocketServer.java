@@ -1,5 +1,6 @@
 package com.catas.rpc.transport.socket.server;
 
+import com.catas.rpc.hook.ShutdownHook;
 import com.catas.rpc.provider.ServiceProviderImpl;
 import com.catas.rpc.registry.NacosServiceRegistry;
 import com.catas.rpc.registry.ServiceRegistry;
@@ -9,7 +10,7 @@ import com.catas.rpc.enumeration.RPCError;
 import com.catas.rpc.exception.RPCException;
 import com.catas.rpc.provider.ServiceProvider;
 import com.catas.rpc.serializer.CommonSerializer;
-import com.catas.rpc.util.ThreadPoolFactory;
+import com.catas.rpc.factory.ThreadPoolFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -68,6 +69,7 @@ public class SocketServer implements RPCServer {
         try {
             ServerSocket serverSocket = new ServerSocket(port);
             log.info("socket服务正在启动...");
+            ShutdownHook.getShutDownHook().addClearHook();
             Socket socket;
             while ((socket = serverSocket.accept()) != null) {
                 log.info("连接到客户端: {} : {}", socket.getInetAddress(), socket.getPort());

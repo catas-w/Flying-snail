@@ -1,5 +1,6 @@
 package com.catas.rpc.transport.netty.server;
 
+import com.catas.rpc.hook.ShutdownHook;
 import com.catas.rpc.provider.ServiceProvider;
 import com.catas.rpc.provider.ServiceProviderImpl;
 import com.catas.rpc.registry.NacosServiceRegistry;
@@ -61,6 +62,7 @@ public class NettyServer implements RPCServer {
 
     @Override
     public void start() {
+        ShutdownHook.getShutDownHook().addClearHook();
         // 创建两个线程组
         NioEventLoopGroup bossGroup = new NioEventLoopGroup();
         NioEventLoopGroup workerGroup = new NioEventLoopGroup();

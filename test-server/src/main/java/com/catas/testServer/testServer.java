@@ -14,9 +14,9 @@ public class testServer {
         HelloServiceImpl helloService = new HelloServiceImpl();
         AddServiceImpl addService = new AddServiceImpl();
 
-        SocketServer socketServer = new SocketServer("127.0.0.1", 9001);
+        SocketServer socketServer = new SocketServer("127.0.0.1", 9002);
         socketServer.setSerializer(new HessianSerializer());
-        socketServer.publishService(addService, AddService.class);
+        socketServer.publishService(helloService, AddService.class);
 
         // ServiceProvider serviceProvider = new ServiceProviderImpl();
         // serviceProvider.addServiceProvider(helloService);

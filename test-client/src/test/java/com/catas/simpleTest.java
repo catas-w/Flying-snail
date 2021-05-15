@@ -29,14 +29,6 @@ public class simpleTest {
 
     @Test
     public void test3() {
-        // System.out.println(removeInvalidParentheses("q("));
-        // System.out.println(removeInvalidParentheses("q)"));
-        // System.out.println(removeInvalidParentheses("(a"));
-        // System.out.println(removeInvalidParentheses(""));
-        // System.out.println(removeInvalidParentheses("(a)())()"));
-        // System.out.println(removeInvalidParentheses("(a()))(s)())()"));
-        // System.out.println(removeInvalidParentheses(")("));
-        // System.out.println(removeInvalidParentheses("(()"));
         System.out.println(removeInvalidParentheses("()(((((((()"));
     }
 
@@ -89,5 +81,45 @@ public class simpleTest {
             }
         }
         return count == 0;
+    }
+
+    @Test
+    public void testTK() {
+        System.out.println(Arrays.toString(topKFrequent(new int[]{1, 1, 2, 2, 2, 3, 4, 4, 5, 5, 6, 6, 6}, 2)));
+        System.out.println(Arrays.toString(topKFrequent(new int[]{-1,-1,2,2,3}, 2)));
+        System.out.println(Arrays.toString(topKFrequent(new int[]{-1,-1}, 1)));
+    }
+
+    public int[] topKFrequent(int[] nums, int k) {
+        int len = nums.length;
+        int[] res = new int[k];
+        // int[] count = new int[len + 1];
+        Map<Integer, Integer> count = new HashMap<>();
+
+        Queue[] seq = new Queue[len + 1];
+
+        for (int n: nums) {
+            int frequence = count.getOrDefault(n, 0) + 1;
+            count.put(n, frequence);
+        }
+
+        for (int i: count.keySet()) {
+            int frequence = count.get(i);
+            if (seq[frequence] == null) {
+                seq[frequence] = new LinkedList<Integer>();
+            }
+            seq[frequence].add(i);
+
+        }
+        int index = 0;
+        while (k > 0 && len > 0) {
+            while (seq[len] != null && !seq[len].isEmpty()) {
+                // res[index++] = seq[len];
+                res[index++] = (int) seq[len].poll();
+                k--;
+            }
+            len --;
+        }
+        return res;
     }
 }

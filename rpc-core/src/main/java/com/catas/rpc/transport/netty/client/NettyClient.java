@@ -1,6 +1,8 @@
 package com.catas.rpc.transport.netty.client;
 
+import com.catas.rpc.registry.NacosServiceDiscovery;
 import com.catas.rpc.registry.NacosServiceRegistry;
+import com.catas.rpc.registry.ServiceDiscovery;
 import com.catas.rpc.registry.ServiceRegistry;
 import com.catas.rpc.transport.RPCClient;
 import com.catas.rpc.entity.RPCRequest;
@@ -28,8 +30,11 @@ public class NettyClient implements RPCClient {
 
     private final ServiceRegistry serviceRegistry;
 
+    private final ServiceDiscovery serviceDiscovery;
+
     public NettyClient() {
         this.serviceRegistry = new NacosServiceRegistry();
+        this.serviceDiscovery = new NacosServiceDiscovery();
     }
 
     static {
@@ -49,8 +54,8 @@ public class NettyClient implements RPCClient {
         AtomicReference<Object> result = new AtomicReference<>(null);
 
         try {
-            // 在注册中心找到注册此服务的server地址
-            InetSocketAddress socketAddress = serviceRegistry.lookUpService(request.getInterfaceName());
+            // 找到注册此服务的server地址
+            InetSocketAddress socketAddress = serviceDiscovery.lookupService(request.getInterfaceName());
             // 连接
             Channel channel = ChannelProvider.get(socketAddress, serializer);
 

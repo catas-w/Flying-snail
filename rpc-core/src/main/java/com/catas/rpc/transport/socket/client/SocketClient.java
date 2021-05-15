@@ -1,7 +1,9 @@
 package com.catas.rpc.transport.socket.client;
 
 
+import com.catas.rpc.registry.NacosServiceDiscovery;
 import com.catas.rpc.registry.NacosServiceRegistry;
+import com.catas.rpc.registry.ServiceDiscovery;
 import com.catas.rpc.registry.ServiceRegistry;
 import com.catas.rpc.transport.RPCClient;
 import com.catas.rpc.enumeration.RPCError;
@@ -28,12 +30,15 @@ public class SocketClient implements RPCClient{
 
     private final ServiceRegistry serviceRegistry;
 
+    private final ServiceDiscovery serviceDiscovery;
+
     public void setSerializer(CommonSerializer serializer) {
         this.serializer = serializer;
     }
 
     public SocketClient() {
         this.serviceRegistry = new NacosServiceRegistry();
+        this.serviceDiscovery = new NacosServiceDiscovery();
     }
 
     @Override
@@ -42,7 +47,8 @@ public class SocketClient implements RPCClient{
             log.error("序列化器不能为空");
             throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
         }
-        InetSocketAddress socketAddress = serviceRegistry.lookUpService(request.getInterfaceName());
+        // 服务发现
+        InetSocketAddress socketAddress = serviceDiscovery.lookupService(request.getInterfaceName());
 
         try {
             Socket socket = new Socket();
