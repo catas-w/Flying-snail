@@ -13,7 +13,7 @@ public class testClient {
 
     public static void main(String[] args) {
         SocketClient socketClient = new SocketClient();
-        socketClient.setSerializer(new HessianSerializer());
+        // socketClient.setSerializer(new HessianSerializer());
 
         RPCClientProxy clientProxy = new RPCClientProxy(socketClient);
         AddService addProxy = clientProxy.getProxy(AddService.class);

@@ -18,9 +18,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -86,7 +88,8 @@ public class NettyServer implements RPCServer {
                         protected void initChannel(SocketChannel channel) throws Exception {
                             // 初始化管道
                             ChannelPipeline pipeline = channel.pipeline();
-                            pipeline.addLast(new CommonDecoder())
+                            pipeline.addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS))
+                                    .addLast(new CommonDecoder())
                                     .addLast(new CommonEncoder(serializer))
                                     .addLast(new NettyServerHandler());
                         }

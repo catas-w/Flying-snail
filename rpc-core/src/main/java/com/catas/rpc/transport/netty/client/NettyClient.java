@@ -1,5 +1,8 @@
 package com.catas.rpc.transport.netty.client;
 
+import com.catas.rpc.factory.SingletonFactory;
+import com.catas.rpc.loadbalancer.LoadBalancer;
+import com.catas.rpc.loadbalancer.RandomLoadBalancer;
 import com.catas.rpc.registry.NacosServiceDiscovery;
 import com.catas.rpc.registry.NacosServiceRegistry;
 import com.catas.rpc.registry.ServiceDiscovery;
@@ -19,6 +22,7 @@ import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -28,68 +32,78 @@ public class NettyClient implements RPCClient {
 
     private static final Bootstrap bootstrap;
 
-    private final ServiceRegistry serviceRegistry;
-
     private final ServiceDiscovery serviceDiscovery;
 
-    public NettyClient() {
-        this.serviceRegistry = new NacosServiceRegistry();
-        this.serviceDiscovery = new NacosServiceDiscovery();
-    }
+    private final LoadBalancer loadBalancer;
+
+    private static final NioEventLoopGroup group;
+
+    private final UnprocessedRequests unprocessedRequests;
 
     static {
-        NioEventLoopGroup group = new NioEventLoopGroup();
+        group = new NioEventLoopGroup();
         bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true);
     }
 
+    public NettyClient() {
+        this(DEFAULT_SERIALIZER, new RandomLoadBalancer());
+    }
+
+    public NettyClient(LoadBalancer loadBalancer) {
+        this(DEFAULT_SERIALIZER, loadBalancer);
+    }
+
+    public NettyClient(Integer serializerCode) {
+        this(serializerCode, new RandomLoadBalancer());
+    }
+
+    public NettyClient(Integer serializer, LoadBalancer loadBalancer) {
+        this.serializer = CommonSerializer.getByCode(serializer);
+        this.serviceDiscovery = new NacosServiceDiscovery();
+        this.loadBalancer = loadBalancer;
+        this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
+    }
+
     @Override
-    public Object sendRequest(RPCRequest request) {
+    public CompletableFuture<RPCResponse> sendRequest(RPCRequest request) {
         if (serializer == null) {
             log.error("序列化器不能为空");
             throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
         }
-        AtomicReference<Object> result = new AtomicReference<>(null);
-
+        // AtomicReference<Object> result = new AtomicReference<>(null);
+        CompletableFuture<RPCResponse> resultFuture = new CompletableFuture();
         try {
             // 找到注册此服务的server地址
             InetSocketAddress socketAddress = serviceDiscovery.lookupService(request.getInterfaceName());
             // 连接
             Channel channel = ChannelProvider.get(socketAddress, serializer);
-
             log.info("客户端连接到服务器: {}:{}", socketAddress.getAddress(), socketAddress.getPort());
-            if (channel.isActive()) {
-                // 向服务器发送请求并设置监听
-                channel.writeAndFlush(request).addListener(future1 -> {
-                    if (future1.isSuccess()) {
-                        log.info(String.format("客户端发送: %s", request.toString()));
-                    }else {
-                        log.info("发送请求时出错, ", future1.cause());
-                    }
-                });
-                channel.closeFuture().sync();
-                // AttributeMap<AttributeKey, AttributeValue>是绑定在Channel上的，可以设置用来获取通道对象
-                AttributeKey<RPCResponse> key = AttributeKey.valueOf("RPCResponse" + request.getRequestId());
-                // 阻塞获取value
-                RPCResponse response = channel.attr(key).get();
-                RPCMessageChecker.check(request, response);
-                result.set(response.getData());
-            } else {
-                System.exit(0);
+            if (!channel.isActive()) {
+                group.shutdownGracefully();
+                return null;
             }
-        } catch (InterruptedException e) {
+            unprocessedRequests.put(request.getRequestId(), resultFuture);
+            // 向服务器发送请求并设置监听
+            channel.writeAndFlush(request).addListener((ChannelFutureListener) future1 -> {
+                if (future1.isSuccess()) {
+                    log.info(String.format("客户端发送: %s", request.toString()));
+                }else {
+                    future1.channel().close();
+                    resultFuture.completeExceptionally(future1.cause());
+                    log.info("发送请求时出错, ", future1.cause());
+                }
+            });
+        } catch (Exception e) {
             log.info("发送请求时出错");
             e.printStackTrace();
+            unprocessedRequests.remove(request.getRequestId());
+            Thread.currentThread().interrupt();
         }
 
-        return result.get();
-    }
-
-    @Override
-    public void setSerializer(CommonSerializer serializer) {
-        this.serializer = serializer;
+        return resultFuture;
     }
 
 }

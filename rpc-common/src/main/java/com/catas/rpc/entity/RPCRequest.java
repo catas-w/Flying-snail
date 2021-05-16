@@ -25,4 +25,6 @@ public class RPCRequest implements Serializable {
     private Object[] arguments;
 
     private Class<?>[] argTypes;
+
+    private Boolean isHeartBeat;
 }

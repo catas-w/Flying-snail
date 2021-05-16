@@ -1,6 +1,9 @@
 package com.catas.rpc.transport.socket.client;
 
 
+import com.catas.rpc.enumeration.SerializerCode;
+import com.catas.rpc.loadbalancer.LoadBalancer;
+import com.catas.rpc.loadbalancer.RandomLoadBalancer;
 import com.catas.rpc.registry.NacosServiceDiscovery;
 import com.catas.rpc.registry.NacosServiceRegistry;
 import com.catas.rpc.registry.ServiceDiscovery;
@@ -32,13 +35,25 @@ public class SocketClient implements RPCClient{
 
     private final ServiceDiscovery serviceDiscovery;
 
-    public void setSerializer(CommonSerializer serializer) {
-        this.serializer = serializer;
-    }
+    private final LoadBalancer loadBalancer;
 
     public SocketClient() {
+        this(DEFAULT_SERIALIZER, new RandomLoadBalancer());
+    }
+
+    public SocketClient(Integer serializer) {
+        this(serializer, new RandomLoadBalancer());
+    }
+
+    public SocketClient(LoadBalancer loadBalancer) {
+        this(DEFAULT_SERIALIZER, loadBalancer);
+    }
+
+    public SocketClient(Integer serializer, LoadBalancer loadBalancer) {
         this.serviceRegistry = new NacosServiceRegistry();
         this.serviceDiscovery = new NacosServiceDiscovery();
+        this.serializer = CommonSerializer.getByCode(serializer);
+        this.loadBalancer = loadBalancer;
     }
 
     @Override
@@ -71,7 +86,7 @@ public class SocketClient implements RPCClient{
             }
             // 检查
             RPCMessageChecker.check(request, response);
-            return response.getData();
+            return response;
 
         } catch (IOException e) {
             e.printStackTrace();

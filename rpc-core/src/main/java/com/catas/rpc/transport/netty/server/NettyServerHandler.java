@@ -9,6 +9,8 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +29,10 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RPCRequest> 
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, RPCRequest rpcRequest) throws Exception {
 
         try {
+            if (rpcRequest.getIsHeartBeat()) {
+                log.info("服务端收到心跳...");
+                return;
+            }
             log.info("服务器收到请求");
             String interfaceName = rpcRequest.getInterfaceName();
             Object service = SERVICE_PROVIDER.getServiceProvider(interfaceName);
@@ -46,5 +52,17 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<RPCRequest> 
         log.error("调用时错误发生");
         cause.printStackTrace();
         ctx.close();
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            IdleState state = ((IdleStateEvent) evt).state();
+            if (state == IdleState.READER_IDLE) {
+                log.info("长时间为收到心跳, 断开连接...");
+                ctx.close();
+            }
+        } else
+            super.userEventTriggered(ctx, evt);
     }
 }

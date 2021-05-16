@@ -10,12 +10,13 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.Date;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * 用于获取channel对象
@@ -29,7 +30,8 @@ public class ChannelProvider {
 
     private static final int MAX_RETRY_COUNT = 5;
 
-    private static Channel channel;
+    private static Map<String, Channel> channels = new ConcurrentHashMap<>();
+
 
     private static Bootstrap initializeBootstrap() {
         Bootstrap bootstrap = new Bootstrap();
@@ -45,50 +47,54 @@ public class ChannelProvider {
         return bootstrap;
     }
 
-    public static Channel get(InetSocketAddress socketAddress, CommonSerializer serializer) {
+    public static Channel get(InetSocketAddress socketAddress, CommonSerializer serializer) throws ExecutionException {
+        String key = socketAddress.toString() + serializer.getCode();
+        if (channels.containsKey(key)) {
+            Channel channel = channels.get(key);
+            if (channel != null && channel.isActive()) {
+                return channel;
+            } else {
+                channels.remove(key);
+            }
+        }
+
+        Channel channel = null;
         bootstrap.handler(new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 ch.pipeline()
+                        .addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS))
                         .addLast(new CommonEncoder(serializer))
                         .addLast(new CommonDecoder())
                         .addLast(new NettyClientHandler());
             }
         });
         // 设置计数器值为 1
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        // CountDownLatch countDownLatch = new CountDownLatch(1);
         try {
-            connect(bootstrap, socketAddress, countDownLatch);
-            countDownLatch.await();
+            channel = connect(bootstrap, socketAddress);
+            // countDownLatch.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
             log.error("获取 channel 时有错误发生.");
         }
+        channels.put(key, channel);
         return channel;
     }
 
-    private static void connect(Bootstrap bootstrap, InetSocketAddress socketAddress, CountDownLatch countDownLatch) {
-        connect(bootstrap, socketAddress, MAX_RETRY_COUNT, countDownLatch);
-    }
 
-    private static void connect(Bootstrap bootstrap, InetSocketAddress socketAddress, int retry, CountDownLatch countDownLatch) {
+    private static Channel connect(Bootstrap bootstrap, InetSocketAddress socketAddress) throws ExecutionException, InterruptedException {
+        CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
+
         bootstrap.connect(socketAddress).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
                 log.info("客户端连接成功");
-                channel = future.channel();
-                countDownLatch.countDown();
-                return;
+                completableFuture.complete(future.channel());
+            }else {
+                throw new IllegalStateException();
             }
-            if (retry == 0) {
-                log.error("客户端连接失败, 重试次数用尽");
-                countDownLatch.countDown();
-                throw new RPCException(RPCError.SERVICE_INVOCATION_FAILURE);
-            }
-            int order = (MAX_RETRY_COUNT - retry) + 1;
-            int delay = 1 << order;
-            log.error("{} 连接失败, 尝试第: {}次重连.", new Date(), order);
-            bootstrap.config().group().schedule(
-                    () -> connect(bootstrap, socketAddress, retry-1, countDownLatch), delay, TimeUnit.SECONDS);
         });
+
+        return completableFuture.get();
     }
 }
