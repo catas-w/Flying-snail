@@ -17,7 +17,7 @@ import java.util.Set;
 @Slf4j
 public class NacosUtil {
 
-    private static final String SERVER_ADDR = "127.0.0.1:8848";
+    private static final String SERVER_ADDR = "127.0.0.1:9080";
 
     private static final NamingService namingService;
 

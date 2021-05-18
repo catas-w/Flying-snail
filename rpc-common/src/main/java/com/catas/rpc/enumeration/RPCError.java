@@ -16,7 +16,9 @@ public enum RPCError {
     SERIALIZER_NOT_FOUND("找不到序列化器"),
     RESPONSE_NOT_MATCH("响应与请求不匹配"),
     FAILED_TO_CONNECT_TO_SERVICE_REGISTRY("无法连接到注册中心"),
-    REGISTER_SERVICE_FAILED("服务注册失败")
+    REGISTER_SERVICE_FAILED("服务注册失败"),
+    SERVICE_SCAN_PACKAGE_NOT_FOUND("启动类缺少ServiceScan注解"),
+    UNKNOWN_ERROR("出现未知错误")
     ;
 
     private final String message;

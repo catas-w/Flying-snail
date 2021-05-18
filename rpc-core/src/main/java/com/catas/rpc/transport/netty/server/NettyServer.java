@@ -1,10 +1,12 @@
 package com.catas.rpc.transport.netty.server;
 
+import com.catas.rpc.enumeration.SerializerCode;
 import com.catas.rpc.hook.ShutdownHook;
 import com.catas.rpc.provider.ServiceProvider;
 import com.catas.rpc.provider.ServiceProviderImpl;
 import com.catas.rpc.registry.NacosServiceRegistry;
 import com.catas.rpc.registry.ServiceRegistry;
+import com.catas.rpc.transport.AbstractRpcServer;
 import com.catas.rpc.transport.RPCServer;
 import com.catas.rpc.codec.CommonDecoder;
 import com.catas.rpc.codec.CommonEncoder;
@@ -26,40 +28,27 @@ import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
-public class NettyServer implements RPCServer {
-
-    private final String host;
-
-    private final Integer port;
-
-    private final ServiceProvider serviceProvider;
-
-    private final ServiceRegistry serviceRegistry;
+public class NettyServer extends AbstractRpcServer {
 
     private CommonSerializer serializer;
 
     public NettyServer(String host, Integer port) {
+        this(host, port, SerializerCode.HESSIAN.getCode());
+    }
+
+    public NettyServer(String host, Integer port, Integer serializer) {
         this.host = host;
         this.port = port;
         this.serviceRegistry = new NacosServiceRegistry();
         this.serviceProvider = new ServiceProviderImpl();
+        this.serializer = CommonSerializer.getByCode(serializer);
+        // 扫描服务
+        scanService();
     }
 
     @Override
     public void setSerializer(CommonSerializer serializer) {
         this.serializer = serializer;
-    }
-
-    @Override
-    public <T> void publishService(Object service, Class<T> serviceClass) {
-        if (serializer == null) {
-            log.error("序列化器不能为空");
-            throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
-        }
-        // 注册当前服务
-        serviceProvider.addServiceProvider(service);
-        serviceRegistry.register(serviceClass.getCanonicalName(), new InetSocketAddress(host, port));
-        start();
     }
 
     @Override

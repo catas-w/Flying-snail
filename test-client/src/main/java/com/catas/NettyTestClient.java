@@ -16,10 +16,10 @@ public class NettyTestClient {
         NettyClient nettyClient = new NettyClient();
         // nettyClient.setSerializer(new HessianSerializer());
         RPCClientProxy clientProxy = new RPCClientProxy(nettyClient);
-        // HelloService proxy = clientProxy.getProxy(HelloService.class);
-        // HelloObj helloObj = new HelloObj(11, "ccc");
-        // String res = proxy.hello(helloObj);
-        // System.out.println(res);
+        HelloService proxy = clientProxy.getProxy(HelloService.class);
+        HelloObj helloObj = new HelloObj(11, "ccc");
+        String res1 = proxy.hello(helloObj);
+        System.out.println(res1);
 
         AddService addProxy = clientProxy.getProxy(AddService.class);
         Integer res = addProxy.add(23, 12);

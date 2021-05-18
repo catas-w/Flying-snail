@@ -6,7 +6,7 @@ public interface ServiceProvider {
      * @Description: 注册服务
      * @param service 服务对象
      */
-    <T> void addServiceProvider(T service);
+    <T> void addServiceProvider(T service, String serviceName);
 
     /**
      * @Description: 获取service对象

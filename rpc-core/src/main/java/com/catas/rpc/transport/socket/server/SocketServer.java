@@ -1,9 +1,11 @@
 package com.catas.rpc.transport.socket.server;
 
+import com.catas.rpc.enumeration.SerializerCode;
 import com.catas.rpc.hook.ShutdownHook;
 import com.catas.rpc.provider.ServiceProviderImpl;
 import com.catas.rpc.registry.NacosServiceRegistry;
 import com.catas.rpc.registry.ServiceRegistry;
+import com.catas.rpc.transport.AbstractRpcServer;
 import com.catas.rpc.transport.RPCServer;
 import com.catas.rpc.handler.RequestHandler;
 import com.catas.rpc.enumeration.RPCError;
@@ -20,48 +22,31 @@ import java.net.Socket;
 import java.util.concurrent.*;
 
 @Slf4j
-public class SocketServer implements RPCServer {
+public class SocketServer extends AbstractRpcServer {
 
     private final ExecutorService threadPool;
-
-    private final ServiceProvider serviceProvider;
 
     private final RequestHandler requestHandler = new RequestHandler();
 
     private CommonSerializer serializer;
-
-    private final String host;
-
-    private final Integer port;
-
-    private final ServiceRegistry serviceRegistry;
-
-    private static final int CORE_POOL_SIZE = 5;
-    private static final int MAX_POOL_SIZE = 50;
-    private static final int KEEP_ALIVE = 60;
-    private static final int BLOCK_QUEUE_CAPACITY = 100;
 
     public void setSerializer(CommonSerializer serializer) {
         this.serializer = serializer;
     }
 
     public SocketServer(String host, Integer port) {
+        this(host, port, CommonSerializer.getByCode(SerializerCode.HESSIAN.getCode()));
+    }
+
+    public SocketServer(String host, Integer port, CommonSerializer serializer) {
         this.host = host;
         this.port = port;
         threadPool = ThreadPoolFactory.createDefaultThreadPool("socket-rpc-server");
         this.serviceProvider = new ServiceProviderImpl();
         this.serviceRegistry = new NacosServiceRegistry();
-    }
-
-    @Override
-    public <T> void publishService(Object service, Class<T> serviceClass) {
-        if (serializer == null) {
-            log.error("序列化器未设置");
-            throw new RPCException(RPCError.SERIALIZER_NOT_FOUND);
-        }
-        serviceProvider.addServiceProvider(service);
-        serviceRegistry.register(serviceClass.getCanonicalName(), new InetSocketAddress(host, port));
-        start();
+        this.serializer = serializer;
+        // 扫描服务
+        scanService();
     }
 
     @Override

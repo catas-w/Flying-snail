@@ -11,5 +11,5 @@ public interface RPCServer {
     void setSerializer(CommonSerializer serializer);
 
     // 注册服务
-    <T> void publishService(Object service, Class<T> serviceClass);
+    <T> void publishService(Object service, String serviceName);
 }

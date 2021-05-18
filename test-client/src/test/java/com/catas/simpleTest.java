@@ -122,4 +122,93 @@ public class simpleTest {
         }
         return res;
     }
+
+    @Test
+    public void testDecode() {
+        System.out.println(findDisappearedNumbers(new int[]{1,2,3,3,5}));
+        System.out.println(findDisappearedNumbers(new int[]{4,3,2,7,8,2,3,1}));
+        System.out.println(findDisappearedNumbers(new int[]{1,3,3,4,5,5,7}));
+        System.out.println(findDisappearedNumbers(new int[]{1,3,3,7,5,5,7}));
+        System.out.println(findDisappearedNumbers(new int[]{1,1}));
+        System.out.println(findDisappearedNumbers(new int[]{}));
+    }
+
+    public List<Integer> findDisappearedNumbers(int[] nums) {
+        List<Integer> res = new ArrayList<>();
+        for (int i=0; i<nums.length; i++) {
+            if (nums[i] == i+1) {
+                continue;
+            }
+            int temp = nums[i];
+            nums[i] = -1;
+            fillArray(nums, temp-1);
+        }
+
+        for (int i=0; i<nums.length; i++) {
+            if (nums[i] == -1) {
+                res.add(i+1);
+            }
+        }
+        return res;
+    }
+
+    public void fillArray(int[] nums, int index) {
+        if (nums[index] == index+1) {
+            return;
+        }
+        if (nums[index] == -1) {
+            nums[index] = index + 1;
+            return;
+        }
+        int temp = nums[index];
+        nums[index] = -1;
+        fillArray(nums, temp - 1);
+        nums[index] = index + 1;
+    }
+
+
+    public String decodeString(String s) {
+        i = 0;
+        return getStr(s, new LinkedList<Integer>());
+    }
+
+    int i;
+
+    public String getStr(String s, Deque<Integer> stack) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder();
+        int freq = 0;
+        for (; i<s.length();) {
+            char chr = s.charAt(i);
+            if (chr >= '0' && chr <= '9') {
+                // 当前字符为数字, 计算频率
+                freq = freq * 10 + (chr - '0');
+                i ++;
+            } else if (chr == '[') {
+                // 当前字符为左括号, 迭代获取括号内内容
+                stack.push(0);
+                i++;
+                String substr = getStr(s, stack);
+                while (freq > 0) {
+                    builder.append(substr);
+                    freq --;
+                }
+            } else if (chr == ']') {
+                // 当前字符为右括号, 说明正在迭代
+                stack.pop();
+                i++;
+                return builder.toString();
+            } else {
+                // 当前字符为字母
+                builder.append(chr);
+                i++;
+            }
+        }
+
+        return builder.toString();
+    }
+
+
 }
