@@ -1,11 +1,11 @@
 package com.catas.rpc.transport.socket.client;
 
 
-import com.catas.rpc.enumeration.SerializerCode;
 import com.catas.rpc.loadbalancer.LoadBalancer;
 import com.catas.rpc.loadbalancer.RandomLoadBalancer;
-import com.catas.rpc.registry.NacosServiceDiscovery;
-import com.catas.rpc.registry.NacosServiceRegistry;
+import com.catas.rpc.provider.ServiceProvider;
+import com.catas.rpc.registry.nacos.NacosServiceDiscovery;
+import com.catas.rpc.registry.nacos.NacosServiceRegistry;
 import com.catas.rpc.registry.ServiceDiscovery;
 import com.catas.rpc.registry.ServiceRegistry;
 import com.catas.rpc.transport.RPCClient;
@@ -29,31 +29,25 @@ import java.net.Socket;
 @Slf4j
 public class SocketClient implements RPCClient{
 
-    private CommonSerializer serializer;
-
-    private final ServiceRegistry serviceRegistry;
+    private final CommonSerializer serializer;
 
     private final ServiceDiscovery serviceDiscovery;
 
-    private final LoadBalancer loadBalancer;
-
     public SocketClient() {
-        this(DEFAULT_SERIALIZER, new RandomLoadBalancer());
+        this(DEFAULT_SERIALIZER, new NacosServiceDiscovery());
+    }
+
+    public SocketClient(ServiceDiscovery serviceDiscovery) {
+        this(DEFAULT_SERIALIZER, serviceDiscovery);
     }
 
     public SocketClient(Integer serializer) {
-        this(serializer, new RandomLoadBalancer());
+        this(serializer, new NacosServiceDiscovery());
     }
 
-    public SocketClient(LoadBalancer loadBalancer) {
-        this(DEFAULT_SERIALIZER, loadBalancer);
-    }
-
-    public SocketClient(Integer serializer, LoadBalancer loadBalancer) {
-        this.serviceRegistry = new NacosServiceRegistry();
-        this.serviceDiscovery = new NacosServiceDiscovery();
+    public SocketClient(Integer serializer, ServiceDiscovery serviceDiscovery) {
+        this.serviceDiscovery = serviceDiscovery;
         this.serializer = CommonSerializer.getByCode(serializer);
-        this.loadBalancer = loadBalancer;
     }
 
     @Override

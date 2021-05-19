@@ -2,21 +2,17 @@ package com.catas.rpc.transport.socket.server;
 
 import com.catas.rpc.enumeration.SerializerCode;
 import com.catas.rpc.hook.ShutdownHook;
-import com.catas.rpc.provider.ServiceProviderImpl;
-import com.catas.rpc.registry.NacosServiceRegistry;
-import com.catas.rpc.registry.ServiceRegistry;
-import com.catas.rpc.transport.AbstractRpcServer;
-import com.catas.rpc.transport.RPCServer;
-import com.catas.rpc.handler.RequestHandler;
-import com.catas.rpc.enumeration.RPCError;
-import com.catas.rpc.exception.RPCException;
 import com.catas.rpc.provider.ServiceProvider;
+import com.catas.rpc.provider.ServiceProviderImpl;
+import com.catas.rpc.registry.ServiceRegistry;
+import com.catas.rpc.registry.nacos.NacosServiceRegistry;
+import com.catas.rpc.transport.AbstractRpcServer;
+import com.catas.rpc.handler.RequestHandler;
 import com.catas.rpc.serializer.CommonSerializer;
 import com.catas.rpc.factory.ThreadPoolFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
@@ -30,21 +26,31 @@ public class SocketServer extends AbstractRpcServer {
 
     private CommonSerializer serializer;
 
+    private final static int DEFAULT_SERIALIZER = SerializerCode.HESSIAN.getCode();
+
     public void setSerializer(CommonSerializer serializer) {
         this.serializer = serializer;
     }
 
     public SocketServer(String host, Integer port) {
-        this(host, port, CommonSerializer.getByCode(SerializerCode.HESSIAN.getCode()));
+        this(host, port, DEFAULT_SERIALIZER, new NacosServiceRegistry());
     }
 
-    public SocketServer(String host, Integer port, CommonSerializer serializer) {
+    public SocketServer(String host, Integer port, int serializer) {
+        this(host, port, serializer, new NacosServiceRegistry());
+    }
+
+    public SocketServer(String host, Integer port, ServiceRegistry serviceRegistry) {
+        this(host, port, DEFAULT_SERIALIZER, serviceRegistry);
+    }
+
+    public SocketServer(String host, Integer port, int serializer, ServiceRegistry serviceRegistry) {
         this.host = host;
         this.port = port;
         threadPool = ThreadPoolFactory.createDefaultThreadPool("socket-rpc-server");
         this.serviceProvider = new ServiceProviderImpl();
-        this.serviceRegistry = new NacosServiceRegistry();
-        this.serializer = serializer;
+        this.serviceRegistry = serviceRegistry;
+        this.serializer = CommonSerializer.getByCode(serializer);
         // 扫描服务
         scanService();
     }

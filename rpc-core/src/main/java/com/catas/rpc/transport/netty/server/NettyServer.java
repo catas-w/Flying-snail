@@ -2,16 +2,13 @@ package com.catas.rpc.transport.netty.server;
 
 import com.catas.rpc.enumeration.SerializerCode;
 import com.catas.rpc.hook.ShutdownHook;
-import com.catas.rpc.provider.ServiceProvider;
 import com.catas.rpc.provider.ServiceProviderImpl;
-import com.catas.rpc.registry.NacosServiceRegistry;
+import com.catas.rpc.registry.ServiceDiscovery;
 import com.catas.rpc.registry.ServiceRegistry;
+import com.catas.rpc.registry.nacos.NacosServiceRegistry;
 import com.catas.rpc.transport.AbstractRpcServer;
-import com.catas.rpc.transport.RPCServer;
 import com.catas.rpc.codec.CommonDecoder;
 import com.catas.rpc.codec.CommonEncoder;
-import com.catas.rpc.enumeration.RPCError;
-import com.catas.rpc.exception.RPCException;
 import com.catas.rpc.serializer.CommonSerializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -23,7 +20,6 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
 
@@ -32,14 +28,24 @@ public class NettyServer extends AbstractRpcServer {
 
     private CommonSerializer serializer;
 
+    private static final Integer DEFAULT_SERIALIZER = SerializerCode.HESSIAN.getCode();
+
     public NettyServer(String host, Integer port) {
-        this(host, port, SerializerCode.HESSIAN.getCode());
+        this(host, port, DEFAULT_SERIALIZER);
     }
 
     public NettyServer(String host, Integer port, Integer serializer) {
+        this(host, port, serializer, new NacosServiceRegistry());
+    }
+
+    public NettyServer(String host, Integer port, ServiceRegistry serviceRegistry) {
+        this(host, port, DEFAULT_SERIALIZER, serviceRegistry);
+    }
+
+    public NettyServer(String host, Integer port, Integer serializer, ServiceRegistry serviceRegistry) {
         this.host = host;
         this.port = port;
-        this.serviceRegistry = new NacosServiceRegistry();
+        this.serviceRegistry = serviceRegistry;
         this.serviceProvider = new ServiceProviderImpl();
         this.serializer = CommonSerializer.getByCode(serializer);
         // 扫描服务

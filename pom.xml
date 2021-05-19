@@ -22,6 +22,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <netty-version>4.1.50.Final</netty-version>
         <guava.version>29.0-jre</guava.version>
+        <curator-version>4.2.0</curator-version>
     </properties>
 
     <dependencies>

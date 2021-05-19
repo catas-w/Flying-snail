@@ -8,10 +8,25 @@ public class simpleTest {
 
     @Test
     public void test1() {
-        ArrayList<String> integers = new ArrayList<>(Arrays.asList("1","2","3",null));
-        String res = String.join(",", integers);
-        System.out.println(res);
-        assert res.equals("1,2,3,null");
+        // System.out.println(Arrays.toString(reconstructQueue()));
+    }
+
+    public int[][] reconstructQueue(int[][] people) {
+        if (people.length == 0) {
+            return new int[0][0];
+        }
+        Arrays.sort(people, (o1, o2) -> {
+            if (o1[0] == o2[0]) {
+                return Integer.compare(o1[1], o2[1]);
+            } else {
+                return Integer.compare(o1[0], o2[0]);
+            }
+        });
+        List<int[]> ls = new LinkedList<>();
+        for (int[] p : people) {
+            ls.add(p[1], p);
+        }
+        return ls.toArray(new int[people.length][2]);
     }
 
     @Test

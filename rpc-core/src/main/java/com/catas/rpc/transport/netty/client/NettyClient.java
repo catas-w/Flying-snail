@@ -3,38 +3,31 @@ package com.catas.rpc.transport.netty.client;
 import com.catas.rpc.factory.SingletonFactory;
 import com.catas.rpc.loadbalancer.LoadBalancer;
 import com.catas.rpc.loadbalancer.RandomLoadBalancer;
-import com.catas.rpc.registry.NacosServiceDiscovery;
-import com.catas.rpc.registry.NacosServiceRegistry;
+import com.catas.rpc.registry.nacos.NacosServiceDiscovery;
 import com.catas.rpc.registry.ServiceDiscovery;
-import com.catas.rpc.registry.ServiceRegistry;
 import com.catas.rpc.transport.RPCClient;
 import com.catas.rpc.entity.RPCRequest;
 import com.catas.rpc.entity.RPCResponse;
 import com.catas.rpc.enumeration.RPCError;
 import com.catas.rpc.exception.RPCException;
 import com.catas.rpc.serializer.CommonSerializer;
-import com.catas.rpc.util.RPCMessageChecker;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 public class NettyClient implements RPCClient {
 
-    private CommonSerializer serializer;
+    private final CommonSerializer serializer;
 
     private static final Bootstrap bootstrap;
 
     private final ServiceDiscovery serviceDiscovery;
-
-    private final LoadBalancer loadBalancer;
 
     private static final NioEventLoopGroup group;
 
@@ -49,21 +42,21 @@ public class NettyClient implements RPCClient {
     }
 
     public NettyClient() {
-        this(DEFAULT_SERIALIZER, new RandomLoadBalancer());
+        this(DEFAULT_SERIALIZER, new NacosServiceDiscovery());
     }
 
-    public NettyClient(LoadBalancer loadBalancer) {
-        this(DEFAULT_SERIALIZER, loadBalancer);
-    }
 
     public NettyClient(Integer serializerCode) {
-        this(serializerCode, new RandomLoadBalancer());
+        this(serializerCode, new NacosServiceDiscovery());
     }
 
-    public NettyClient(Integer serializer, LoadBalancer loadBalancer) {
+    public NettyClient(ServiceDiscovery serviceDiscovery) {
+        this(DEFAULT_SERIALIZER, serviceDiscovery);
+    }
+
+    public NettyClient(Integer serializer, ServiceDiscovery serviceDiscovery) {
         this.serializer = CommonSerializer.getByCode(serializer);
-        this.serviceDiscovery = new NacosServiceDiscovery();
-        this.loadBalancer = loadBalancer;
+        this.serviceDiscovery = serviceDiscovery;
         this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
     }
 

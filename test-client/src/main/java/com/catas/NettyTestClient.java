@@ -1,5 +1,7 @@
 package com.catas;
 
+import com.catas.rpc.loadbalancer.RandomLoadBalancer;
+import com.catas.rpc.registry.zookeeper.ZkServiceDiscovery;
 import com.catas.rpc.serializer.HessianSerializer;
 import com.catas.rpc.transport.RPCClientProxy;
 import com.catas.rpc.api.AddService;
@@ -13,7 +15,7 @@ public class NettyTestClient {
 
     public static void main(String[] args) {
 
-        NettyClient nettyClient = new NettyClient();
+        NettyClient nettyClient = new NettyClient(new ZkServiceDiscovery(new RandomLoadBalancer()));
         // nettyClient.setSerializer(new HessianSerializer());
         RPCClientProxy clientProxy = new RPCClientProxy(nettyClient);
         HelloService proxy = clientProxy.getProxy(HelloService.class);
