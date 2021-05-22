@@ -2,6 +2,7 @@ package com.catas.rpc.transport.netty.server;
 
 import com.catas.rpc.enumeration.SerializerCode;
 import com.catas.rpc.hook.ShutdownHook;
+import com.catas.rpc.provider.ServiceProvider;
 import com.catas.rpc.provider.ServiceProviderImpl;
 import com.catas.rpc.registry.ServiceDiscovery;
 import com.catas.rpc.registry.ServiceRegistry;
@@ -28,29 +29,47 @@ public class NettyServer extends AbstractRpcServer {
 
     private CommonSerializer serializer;
 
-    private static final Integer DEFAULT_SERIALIZER = SerializerCode.HESSIAN.getCode();
-
-    public NettyServer(String host, Integer port) {
-        this(host, port, DEFAULT_SERIALIZER);
+    private NettyServer(Builder builder) {
+        this.host = builder.host;
+        this.port = builder.port;
+        this.serializer = builder.serializer;
+        this.serviceProvider = builder.serviceProvider;
+        this.serviceRegistry = builder.serviceRegistry;
     }
 
-    public NettyServer(String host, Integer port, Integer serializer) {
-        this(host, port, serializer, new NacosServiceRegistry());
+    public static class Builder {
+        private static final Integer DEFAULT_SERIALIZER = SerializerCode.HESSIAN.getCode();
+        private String host = "127.0.0.1";
+        private int port = 9001;
+        private CommonSerializer serializer = CommonSerializer.getByCode(DEFAULT_SERIALIZER);
+        private ServiceRegistry serviceRegistry = new NacosServiceRegistry();
+        private final ServiceProvider serviceProvider = new ServiceProviderImpl();
+
+        public Builder host(String host) {
+            this.host = host;
+            return this;
+        }
+
+        public Builder port(int port) {
+            this.port = port;
+            return this;
+        }
+
+        public Builder serializer(int serializerCode) {
+            this.serializer = CommonSerializer.getByCode(serializerCode);
+            return this;
+        }
+
+        public Builder serviceRegistry(ServiceRegistry serviceRegistry) {
+            this.serviceRegistry = serviceRegistry;
+            return this;
+        }
+
+        public NettyServer build() {
+            return new NettyServer(this);
+        }
     }
 
-    public NettyServer(String host, Integer port, ServiceRegistry serviceRegistry) {
-        this(host, port, DEFAULT_SERIALIZER, serviceRegistry);
-    }
-
-    public NettyServer(String host, Integer port, Integer serializer, ServiceRegistry serviceRegistry) {
-        this.host = host;
-        this.port = port;
-        this.serviceRegistry = serviceRegistry;
-        this.serviceProvider = new ServiceProviderImpl();
-        this.serializer = CommonSerializer.getByCode(serializer);
-        // 扫描服务
-        scanService();
-    }
 
     @Override
     public void setSerializer(CommonSerializer serializer) {
@@ -59,7 +78,7 @@ public class NettyServer extends AbstractRpcServer {
 
     @Override
     public void start() {
-        ShutdownHook.getShutDownHook().addClearHook();
+        ShutdownHook.getShutDownHook().addClearHook(this.serviceRegistry, this.port);
         // 创建两个线程组
         NioEventLoopGroup bossGroup = new NioEventLoopGroup();
         NioEventLoopGroup workerGroup = new NioEventLoopGroup();

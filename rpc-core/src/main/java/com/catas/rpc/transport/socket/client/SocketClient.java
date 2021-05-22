@@ -15,6 +15,7 @@ import com.catas.rpc.entity.RPCRequest;
 import com.catas.rpc.entity.RPCResponse;
 import com.catas.rpc.exception.RPCException;
 import com.catas.rpc.serializer.CommonSerializer;
+import com.catas.rpc.transport.netty.client.NettyClient;
 import com.catas.rpc.transport.socket.util.ObjectReader;
 import com.catas.rpc.transport.socket.util.ObjectWriter;
 import com.catas.rpc.util.RPCMessageChecker;
@@ -33,21 +34,45 @@ public class SocketClient implements RPCClient{
 
     private final ServiceDiscovery serviceDiscovery;
 
-    public SocketClient() {
-        this(DEFAULT_SERIALIZER, new NacosServiceDiscovery());
+    // public SocketClient() {
+    //     this(DEFAULT_SERIALIZER, new NacosServiceDiscovery());
+    // }
+    //
+    // public SocketClient(ServiceDiscovery serviceDiscovery) {
+    //     this(DEFAULT_SERIALIZER, serviceDiscovery);
+    // }
+    //
+    // public SocketClient(Integer serializer) {
+    //     this(serializer, new NacosServiceDiscovery());
+    // }
+    //
+    // public SocketClient(Integer serializer, ServiceDiscovery serviceDiscovery) {
+    //     this.serviceDiscovery = serviceDiscovery;
+    //     this.serializer = CommonSerializer.getByCode(serializer);
+    // }
+
+    private SocketClient(Builder builder) {
+        this.serializer = builder.serializer;
+        this.serviceDiscovery = builder.serviceDiscovery;
     }
 
-    public SocketClient(ServiceDiscovery serviceDiscovery) {
-        this(DEFAULT_SERIALIZER, serviceDiscovery);
-    }
+    public static class Builder {
+        private CommonSerializer serializer = CommonSerializer.getByCode(DEFAULT_SERIALIZER);
+        private ServiceDiscovery serviceDiscovery = new NacosServiceDiscovery();
 
-    public SocketClient(Integer serializer) {
-        this(serializer, new NacosServiceDiscovery());
-    }
+        public Builder serializer(int serializerCode) {
+            this.serializer = CommonSerializer.getByCode(DEFAULT_SERIALIZER);
+            return this;
+        }
 
-    public SocketClient(Integer serializer, ServiceDiscovery serviceDiscovery) {
-        this.serviceDiscovery = serviceDiscovery;
-        this.serializer = CommonSerializer.getByCode(serializer);
+        public Builder serviceDiscovery(ServiceDiscovery serviceDiscovery) {
+            this.serviceDiscovery = serviceDiscovery;
+            return this;
+        }
+
+        public SocketClient build() {
+            return new SocketClient(this);
+        }
     }
 
     @Override

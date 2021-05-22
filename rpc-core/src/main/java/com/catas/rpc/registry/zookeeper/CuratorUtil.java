@@ -1,6 +1,8 @@
-package com.catas.rpc.util;
+package com.catas.rpc.registry.zookeeper;
 
 
+import com.catas.rpc.enumeration.ConfigEnum;
+import com.catas.rpc.util.PropertiesUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -14,6 +16,7 @@ import org.apache.zookeeper.CreateMode;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +32,7 @@ public class CuratorUtil {
     private static final Map<String, List<String>> SERVICE_ADDRESS_MAP = new ConcurrentHashMap<>();
     private static final Set<String> REGISTERED_PATH_SET = ConcurrentHashMap.newKeySet();
     private static CuratorFramework zkClient;
-    private static final String DEFAULT_ZOOKEEPER_ADDRESS = "127.0.0.1:9009";
+    private static final String DEFAULT_ZOOKEEPER_ADDRESS = "127.0.0.1:2181";
 
     public static final String ZK_REGISTER_ROOT_PATH = "/rpc";
 
@@ -98,9 +101,16 @@ public class CuratorUtil {
         if (zkClient != null && zkClient.getState() == CuratorFrameworkState.STARTED) {
             return zkClient;
         }
+
+        Properties properties = PropertiesUtil.readProperties(ConfigEnum.RPC_CONFIG_PATH.getProperty());
+        String zookeeperAddr = DEFAULT_ZOOKEEPER_ADDRESS;
+        if (properties != null && properties.getProperty(ConfigEnum.ZK_ADDRESS.getProperty()) != null) {
+            zookeeperAddr = properties.getProperty(ConfigEnum.ZK_ADDRESS.getProperty());
+        }
+
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(BASE_SLEEP_TIME, MAX_RETRIES);
         zkClient = CuratorFrameworkFactory.builder()
-                .connectString(DEFAULT_ZOOKEEPER_ADDRESS)
+                .connectString(zookeeperAddr)
                 .retryPolicy(retryPolicy)
                 .build();
         zkClient.start();

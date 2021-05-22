@@ -1,8 +1,6 @@
 package com.catas.rpc.transport.netty.client;
 
 import com.catas.rpc.factory.SingletonFactory;
-import com.catas.rpc.loadbalancer.LoadBalancer;
-import com.catas.rpc.loadbalancer.RandomLoadBalancer;
 import com.catas.rpc.registry.nacos.NacosServiceDiscovery;
 import com.catas.rpc.registry.ServiceDiscovery;
 import com.catas.rpc.transport.RPCClient;
@@ -25,40 +23,46 @@ public class NettyClient implements RPCClient {
 
     private final CommonSerializer serializer;
 
-    private static final Bootstrap bootstrap;
+    private final Bootstrap bootstrap;
 
     private final ServiceDiscovery serviceDiscovery;
 
-    private static final NioEventLoopGroup group;
+    private final NioEventLoopGroup group;
 
     private final UnprocessedRequests unprocessedRequests;
 
-    static {
+    private NettyClient(Builder builder) {
         group = new NioEventLoopGroup();
         bootstrap = new Bootstrap();
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true);
-    }
 
-    public NettyClient() {
-        this(DEFAULT_SERIALIZER, new NacosServiceDiscovery());
-    }
-
-
-    public NettyClient(Integer serializerCode) {
-        this(serializerCode, new NacosServiceDiscovery());
-    }
-
-    public NettyClient(ServiceDiscovery serviceDiscovery) {
-        this(DEFAULT_SERIALIZER, serviceDiscovery);
-    }
-
-    public NettyClient(Integer serializer, ServiceDiscovery serviceDiscovery) {
-        this.serializer = CommonSerializer.getByCode(serializer);
-        this.serviceDiscovery = serviceDiscovery;
         this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
+
+        this.serializer = builder.serializer;
+        this.serviceDiscovery = builder.serviceDiscovery;
     }
+
+    public static class Builder {
+        private CommonSerializer serializer = CommonSerializer.getByCode(DEFAULT_SERIALIZER);
+        private ServiceDiscovery serviceDiscovery = new NacosServiceDiscovery();
+
+        public Builder serializer(int serializerCode) {
+            this.serializer = CommonSerializer.getByCode(DEFAULT_SERIALIZER);
+            return this;
+        }
+
+        public Builder serviceDiscovery(ServiceDiscovery serviceDiscovery) {
+            this.serviceDiscovery = serviceDiscovery;
+            return this;
+        }
+
+        public NettyClient build() {
+            return new NettyClient(this);
+        }
+    }
+
 
     @Override
     public CompletableFuture<RPCResponse> sendRequest(RPCRequest request) {

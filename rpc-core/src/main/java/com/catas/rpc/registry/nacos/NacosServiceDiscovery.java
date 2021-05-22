@@ -1,11 +1,11 @@
 package com.catas.rpc.registry.nacos;
 
 import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.catas.rpc.loadbalancer.LoadBalancer;
 import com.catas.rpc.loadbalancer.RandomLoadBalancer;
 import com.catas.rpc.registry.ServiceDiscovery;
-import com.catas.rpc.util.NacosUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
@@ -27,8 +27,9 @@ public class NacosServiceDiscovery implements ServiceDiscovery {
 
     @Override
     public InetSocketAddress lookupService(String serviceName) {
+        NamingService namingService = NacosUtil.getNamingService();
         try {
-            List<Instance> allInstances = NacosUtil.getAllInstance(serviceName);
+            List<Instance> allInstances = NacosUtil.getAllInstance(namingService, serviceName);
             List<String> addresses = new ArrayList<>();
             for (Instance instance : allInstances) {
                 addresses.add(instance.getIp() + ":" + instance.getPort());

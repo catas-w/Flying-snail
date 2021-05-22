@@ -14,4 +14,5 @@ public interface ServiceRegistry {
      */
     void register(String serviceName, InetSocketAddress socketAddress);
 
+    void clearRegistry(int port);
 }

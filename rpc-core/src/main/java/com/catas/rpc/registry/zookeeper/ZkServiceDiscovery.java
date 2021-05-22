@@ -4,7 +4,6 @@ package com.catas.rpc.registry.zookeeper;
 import com.catas.rpc.loadbalancer.LoadBalancer;
 import com.catas.rpc.loadbalancer.RandomLoadBalancer;
 import com.catas.rpc.registry.ServiceDiscovery;
-import com.catas.rpc.util.CuratorUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 
