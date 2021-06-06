@@ -17,7 +17,7 @@ public class ThreadPoolFactory {
     private static final int KEEP_ALIVE = 60;
     private static final int BLOCK_QUEUE_CAPACITY = 100;
 
-    private static Map<String, ExecutorService> threadPoolsMap = new ConcurrentHashMap<>();
+    private static final Map<String, ExecutorService> threadPoolsMap = new ConcurrentHashMap<>();
 
     private ThreadPoolFactory() {
         super();
