@@ -18,7 +18,7 @@ public class NettyTestServer {
         // NettyServer nettyServer = new NettyServer("127.0.0.1", 9001, new ZkServiceRegistry());
         NettyServer nettyServer = new NettyServer.Builder()
                 .port(9001)
-                .serviceRegistry(new ZkServiceRegistry())
+                // .serviceRegistry(new ZkServiceRegistry())
                 .build();
         nettyServer.scanService();
         nettyServer.start();

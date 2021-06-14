@@ -24,6 +24,103 @@ public class simpleTest2 {
         System.out.println(Arrays.toString(calcEquation(equations, new double[]{2, 3, 1, 3, 0.5}, queries)));
     }
 
+    @Test
+    public void testMiss() {
+        // System.out.println(firstMissingPositive(new int[]{3,4,-1,1,10}));
+        // System.out.println(firstMissingPositive(new int[]{7,8,9,11,12}));
+        // System.out.println(firstMissingPositive(new int[]{7,8,1,2,9,11,12}));
+        // System.out.println(firstMissingPositive(new int[]{7,8,1,2,9,3,12,5}));
+        System.out.println(firstMissingPositive(new int[]{1}));
+        System.out.println(firstMissingPositive(new int[]{1,2,3}));
+
+
+        String str = "ssss";
+        System.out.println(str.substring(4));;
+    }
+
+    @Test
+    public void testBD() {
+        // int s = testB();
+        // System.out.println(s);
+        // System.out.println(FirstNotRepeatingChar("AABBCD"));
+        System.out.println((1L << 1) & ~1);
+    }
+
+
+    public int testB() {
+        int a = 20;
+        try {
+            return a + 25;
+        } catch (Exception e) {
+            System.out.println("test catch exception");
+        } finally {
+            System.out.print(a + " ");
+            a = a + 10;
+        }
+        return a;
+    }
+
+    public int FirstNotRepeatingChar(String str) {
+        if (str == null || str.length() == 0)
+            return 0;
+
+        int len = str.length();
+        long count = 0;
+        long failed = 0;
+        for (int i=0; i < len; i++) {
+            int curPos = str.charAt(i) - 'A';
+            int pos = 1 << curPos;
+            if ((failed & pos) == 1)
+                continue;
+
+            if ((count & pos) == 0)
+                count |= pos;
+            else {
+                count &= ~pos;
+                failed |= pos;
+            }
+            System.out.println((Integer.toBinaryString(Math.toIntExact(count))));
+            System.out.println((Integer.toBinaryString(Math.toIntExact(failed))));
+            System.out.println("---");
+        }
+
+        for (int i=0; i < len; i++) {
+            int curPos = str.charAt(i) - 'A';
+            int pos = 1 << curPos;
+            if ((count & pos) == pos)
+                return i;
+        }
+
+        return -1;
+    }
+
+    public int firstMissingPositive(int[] nums) {
+        int len = nums.length;
+        for (int i=0; i<len; i++) {
+            if (nums[i] != i + 1)
+                fill(nums, nums[i] - 1);
+        }
+        System.out.println(Arrays.toString(nums));
+
+        for (int i=0; i<len; i++) {
+            if (nums[i] != i+1)
+                return i + 1;
+        }
+        return len + 1;
+    }
+
+    private void fill(int[] nums, int pos) {
+        if (pos < 0 || pos >= nums.length || nums[pos] == pos + 1)
+            return;
+
+        if (nums[pos] > 0) {
+            int temp = nums[pos];
+            nums[pos] = -1;
+            fill(nums, temp - 1);
+        }
+        nums[pos] = pos + 1;
+    }
+
     public double[] calcEquation(List<List<String>> equations, double[] values, List<List<String>> queries) {
         int index = 0;
         Map<String, Integer> map = new HashMap<>();

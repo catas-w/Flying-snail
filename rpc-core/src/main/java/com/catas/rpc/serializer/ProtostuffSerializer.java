@@ -14,10 +14,10 @@ public class ProtostuffSerializer implements CommonSerializer{
 
 
     // 避免每次都申请空间
-    private LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
+    private final LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
 
     // 缓存类对应的 schema
-    private Map<Class<?>, Schema<?>> schemaMap = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Schema<?>> schemaMap = new ConcurrentHashMap<>();
 
     @Override
     public byte[] serialize(Object obj) {

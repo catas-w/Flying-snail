@@ -23,6 +23,7 @@
         <netty-version>4.1.50.Final</netty-version>
         <guava.version>29.0-jre</guava.version>
         <curator-version>4.2.0</curator-version>
+        <spring.version>5.2.7.RELEASE</spring.version>
     </properties>
 
     <dependencies>
