@@ -11,5 +11,5 @@ import java.lang.annotation.*;
 @Documented
 public @interface RPCScan {
 
-    String[] basePackage() default "";
+    String basePackage() default "";
 }

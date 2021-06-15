@@ -74,3 +74,82 @@ public class NettyTestClient {
 }
 ```
 
+### 5 Using in Spring 
+```java
+//---------- server ---------
+// define a RPC server bean
+@RPCScan()
+public class SpringContextTestServer {
+
+    @Bean("rpcServer")
+    public RPCServer setRPCServer() {
+        return new NettyServer.Builder()
+                .port(9001)
+                // .serviceRegistry(new ZkServiceRegistry())
+                .build();
+    }
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SpringContextTestServer.class);
+        RPCServer rpcServer = (RPCServer) context.getBean("rpcServer");
+        rpcServer.start();
+    }
+}
+
+
+
+
+//---------- client ---------
+// define your RPC client bean
+@Component
+public class MyClient {
+    
+    @Bean("rpcClient")
+    RPCClient setRpcClient() {
+        return new NettyClient.Builder()
+                // .serviceDiscovery(new ZkServiceDiscovery())
+                .serializer(SerializerCode.PROTOSTUFF.getCode())
+                .build();
+    }
+}
+
+// remote service controller
+@Component
+@Slf4j
+public class MyController {
+
+    @RPCReference
+    private HelloService helloService;
+
+    @RPCReference
+    private AddService addService;
+
+    @Autowired
+    private RPCClient rpcClient;
+
+    public void helloTest() {
+        helloService.hello(new HelloObj(11, "WDNMD"));
+    }
+
+    public void addTest() {
+        log.info("Add 测试...");
+        Integer res = addService.add(12, 13);
+        log.info("测试结果: {}", res);
+    }
+}
+
+// invoke remote call
+@ComponentScan(basePackages = {"com.catas"})
+public class SpringContextTestClient {
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SpringContextTestClient.class);
+        MyController myController = (MyController) context.getBean("myController");
+
+        myController.helloTest();
+
+        myController.addTest();
+    }
+}
+```
+
