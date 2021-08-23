@@ -2,6 +2,7 @@ package com.catas;
 
 
 import com.catas.rpc.enumeration.SerializerCode;
+import com.catas.rpc.registry.zookeeper.ZkServiceDiscovery;
 import com.catas.rpc.transport.RPCClient;
 import com.catas.rpc.transport.netty.client.NettyClient;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +14,7 @@ public class MyClient {
     @Bean("rpcClient")
     RPCClient setRpcClient() {
         return new NettyClient.Builder()
-                // .serviceDiscovery(new ZkServiceDiscovery())
+                .serviceDiscovery(new ZkServiceDiscovery())
                 .serializer(SerializerCode.PROTOSTUFF.getCode())
                 .build();
     }

@@ -2,6 +2,7 @@ package com.catas.testServer;
 
 
 import com.catas.rpc.annotation.RPCScan;
+import com.catas.rpc.registry.zookeeper.ZkServiceRegistry;
 import com.catas.rpc.transport.RPCServer;
 import com.catas.rpc.transport.netty.server.NettyServer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -13,8 +14,8 @@ public class SpringContextTestServer {
     @Bean("rpcServer")
     public RPCServer setRPCServer() {
         return new NettyServer.Builder()
-                .port(9001)
-                // .serviceRegistry(new ZkServiceRegistry())
+                .port(19090)
+                .serviceRegistry(new ZkServiceRegistry())
                 .build();
     }
 

@@ -9,6 +9,56 @@ public class simpleTest {
     @Test
     public void test1() {
         // System.out.println(Arrays.toString(reconstructQueue()));
+        // StringBuilder stringBuilder = new StringBuilder();
+        // StringBuffer stringBuffer = new StringBuffer();
+        LinkedHashMap<Integer, Integer> map = new LinkedHashMap<>();
+        map.put(1,1);
+        map.put(2,2);
+        map.put(3,2);
+        Iterator<Map.Entry<Integer, Integer>> iterator = map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            System.out.println(iterator.next().getKey());
+        }
+    }
+
+
+    public String compileSeq (String input) {
+        // write code here
+        if (input == null || input.length() == 0)
+            return "";
+        String[] nums = input.split(",");
+        int len = nums.length;
+        int[][] graph = new int[len][len];
+        int[] indegree = new int[len];
+        for (int i=0; i < nums.length; i++) {
+            int num = Integer.valueOf(nums[i]);
+            if (num != -1) {
+                graph[num][i] = 1;
+                indegree[i] ++;
+            }
+        }
+
+        Deque<Integer> queue = new LinkedList<>();
+        StringBuilder res = new StringBuilder();
+
+        for (int i=0; i < len; i++) {
+            if (indegree[i] == 0)
+                queue.addLast(i);
+        }
+
+        while (!queue.isEmpty()) {
+            int num = queue.pollFirst();
+            res.append(num).append(",");
+            for (int i=len-1; i >= 0; i--) {
+                if (graph[num][i] > 0) {
+                    indegree[i] --;
+                    if (indegree[i] == 0)
+                        queue.addFirst(i);
+                }
+            }
+        }
+        res.deleteCharAt(res.length() - 1);
+        return res.toString();
     }
 
     public int[][] reconstructQueue(int[][] people) {

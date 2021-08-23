@@ -48,7 +48,8 @@ public class CuratorUtil {
             } else {
                 zkClient.create()
                         .creatingParentContainersIfNeeded()
-                        .withMode(CreateMode.PERSISTENT)
+                        // .withMode(CreateMode.PERSISTENT)
+                        .withMode(CreateMode.EPHEMERAL)
                         .forPath(path);
                 log.info("节点创建成功: {}", path);
             }
